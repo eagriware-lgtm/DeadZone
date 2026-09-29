@@ -44,6 +44,7 @@ let ammo = 30;
 let reloadTimer = 0;
 let muzzleTimer = 0;
 let weapon = null;
+let audioCtx = null;
 
 const themes = [
   { name:'OUTBREAK', sky:0x101612, fog:0x101612, ground:0x202821, accent:0x65776a, density:0.013 },
@@ -343,8 +344,10 @@ function shoot() {
     return;
   }
   shootCooldown=.16;
+  initAudio();
   ammo--;
   muzzleTimer=.06;
+  gunshotSound();
   const muzzle=weapon?.getObjectByName('muzzle');
   if(muzzle) muzzle.material.opacity=1;
   camera.userData.weaponKick=0.08;
@@ -360,9 +363,49 @@ function shoot() {
   toast('SHOT');
 }
 
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function gunshotSound() {
+  if (!audioCtx) return;
+  const now=audioCtx.currentTime;
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  const filter=audioCtx.createBiquadFilter();
+  osc.type='sawtooth';
+  osc.frequency.setValueAtTime(150,now);
+  osc.frequency.exponentialRampToValueAtTime(55,now+0.08);
+  filter.type='lowpass';
+  filter.frequency.setValueAtTime(1400,now);
+  gain.gain.setValueAtTime(0.0001,now);
+  gain.gain.exponentialRampToValueAtTime(0.38,now+0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001,now+0.12);
+  osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(now); osc.stop(now+0.13);
+}
+
+function reloadSound() {
+  if (!audioCtx) return;
+  const now=audioCtx.currentTime;
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.type='square';
+  osc.frequency.setValueAtTime(500,now);
+  osc.frequency.exponentialRampToValueAtTime(180,now+0.08);
+  gain.gain.setValueAtTime(0.0001,now);
+  gain.gain.exponentialRampToValueAtTime(0.09,now+0.005);
+  gain.gain.exponentialRampToValueAtTime(0.0001,now+0.1);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(now); osc.stop(now+0.11);
+}
+
 function reload() {
   if(!started||reloadTimer>0||ammo===30)return;
+  initAudio();
   reloadTimer=1.15;
+  reloadSound();
   toast('RELOADING');
 }
 
