@@ -1,96 +1,11 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DeadZone — Survival</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main class="app">
-    <section class="hero">
-      <div class="fog"></div>
-      <nav class="topbar">
-        <div class="brand">DEAD<span>ZONE</span></div>
-        <div class="status">NIGHT 01 <i></i> ONLINE</div>
-      </nav>
-
-      <div class="hero-content">
-        <p class="eyebrow">THE EPIC BUILDERS PRESENT</p>
-        <h1>DEAD<span>ZONE</span></h1>
-        <p class="tagline">SURVIVE THE NIGHT. FIND THE ROAD. MAKE IT OUT.</p>
-        <div class="actions">
-          <button class="primary" id="playBtn">PLAY</button>
-          <button id="challengeBtn">CHALLENGES</button>
-        </div>
-      </div>
-
-      <div class="hud">
-        <div><small>BEST SURVIVAL</small><strong id="bestScore">0</strong></div>
-        <div><small>PERSONAL SPEEDRUN</small><strong id="bestTime">--:--</strong></div>
-        <div><small>CAMPAIGN</small><strong>~5 HOURS</strong></div>
-      </div>
-    </section>
-
-    <section class="content" id="play">
-      <div class="section-head">
-        <div><p class="eyebrow">FIRST OBJECTIVE</p><h2>The First Night</h2></div>
-        <span class="pill">5 WAVES</span>
-      </div>
-      <div class="grid">
-        <article class="card challenge-card">
-          <div class="card-icon">☾</div>
-          <h3>Survive the first night</h3>
-          <p>Hold out through five escalating waves and reach the extraction point.</p>
-          <div class="progress"><span></span></div>
-          <div class="card-row"><span>Reward</span><b>500 XP</b></div>
-          <button class="wide" data-action="start">START CHALLENGE</button>
-        </article>
-
-        <article class="card vehicle-card">
-          <div class="car-art">▰</div>
-          <p class="eyebrow">VEHICLE SYSTEM</p>
-          <h3>Abandoned Runner</h3>
-          <p>Approach a usable car and press <kbd>E</kbd> to enter. Engine noise can attract nearby enemies.</p>
-          <div class="specs"><span>FUEL <b>72%</b></span><span>CONDITION <b>64%</b></span></div>
-          <button class="wide ghost" data-action="vehicle">VIEW VEHICLES</button>
-        </article>
-      </div>
-    </section>
-
-    <section class="content dark" id="challenges">
-      <div class="section-head"><div><p class="eyebrow">CHALLENGE BOARD</p><h2>Beat Yourself</h2></div><span class="pill hot">SPEEDRUN</span></div>
-      <div class="speedrun">
-        <div>
-          <h3>THE FIRST NIGHT — SPEEDRUN</h3>
-          <p>Finish all five waves as quickly as possible. Your personal best is saved on this device.</p>
-        </div>
-        <div class="timer" id="timer">00:00.00</div>
-        <div class="run-actions"><button class="primary" id="runBtn">START RUN</button><button id="resetBtn">RESET</button></div>
-      </div>
-    </section>
-
-    <section class="content">
-      <div class="section-head"><div><p class="eyebrow">CAMPAIGN</p><h2>Five Acts</h2></div><span class="pill">~5 HOURS</span></div>
-      <div class="acts">
-        <div><b>01</b><span>The Outbreak</span><small>~1 HR</small></div>
-        <div><b>02</b><span>The Search</span><small>~1 HR</small></div>
-        <div><b>03</b><span>The Road</span><small>~1 HR</small></div>
-        <div><b>04</b><span>The Deep Zone</span><small>~1 HR</small></div>
-        <div><b>05</b><span>DeadZone</span><small>~1 HR</small></div>
-      </div>
-    </section>
-
-    <div class="modal" id="modal" aria-hidden="true">
-      <div class="modal-box">
-        <button class="close" id="closeModal">×</button>
-        <p class="eyebrow">PLAYABLE PROTOTYPE</p>
-        <h2 id="modalTitle">The First Night</h2>
-        <p id="modalText">Prototype shell ready. Next phase: 3D player movement, zombie waves, vehicle entry, and the first city block.</p>
-        <button class="primary wide" id="modalAction">ENTER</button>
-      </div>
-    </div>
-  </main>
-  <script src="script.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeadZone — Playable Prototype</title><link rel="stylesheet" href="style.css"></head>
+<body><main class="game-shell">
+<header><div class="brand">DEAD<span>ZONE</span></div><div class="header-info">NIGHT <b id="wave">1</b>/5 <i></i> SURVIVE</div></header>
+<section class="game-wrap"><canvas id="game" aria-label="DeadZone playable survival game"></canvas>
+<div class="hud"><div><small>HEALTH</small><strong id="health">100</strong></div><div><small>WAVE</small><strong id="waveHud">1 / 5</strong></div><div><small>TIME</small><strong id="time">00:00</strong></div><div><small>VEHICLE</small><strong id="vehicle">ON FOOT</strong></div></div>
+<div class="crosshair">+</div><div class="prompt" id="prompt"></div><div class="message" id="message">WASD to move · Mouse to aim · Click to fire · E near a car</div>
+<div class="mobile-controls"><button data-key="w">▲</button><div><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div></div>
+</section>
+<section class="below"><div><p>THE FIRST NIGHT</p><h1>Survive 5 waves.</h1><span>Defeat the incoming infected, reach the next wave, and use the abandoned car when you need a fast escape.</span></div><button id="restart">RESTART RUN</button></section>
+</main><script src="script.js"></script></body></html>
