@@ -40,6 +40,10 @@ let spawnTimer = 0;
 let shootCooldown = 0;
 let toastTimer = 0;
 let theme = null;
+let ammo = 30;
+let reloadTimer = 0;
+let muzzleTimer = 0;
+let weapon = null;
 
 const themes = [
   { name:'OUTBREAK', sky:0x101612, fog:0x101612, ground:0x202821, accent:0x65776a, density:0.013 },
@@ -51,6 +55,9 @@ const themes = [
 
 const hemi = new THREE.HemisphereLight(0x9fb4a3, 0x11130f, 1.35);
 scene.add(hemi);
+const fill = new THREE.DirectionalLight(0x8fa8a0, 0.7);
+fill.position.set(25, 18, -20);
+scene.add(fill);
 const moon = new THREE.DirectionalLight(0xb9d0bd, 1.8);
 moon.position.set(-25, 35, 18);
 moon.castShadow = true;
@@ -66,6 +73,62 @@ const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshS
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 world.add(ground);
+
+function buildWeapon() {
+  if (weapon) return;
+  weapon = new THREE.Group();
+  weapon.position.set(0.42, -0.42, -0.72);
+  weapon.rotation.set(-0.05, -0.02, 0.02);
+
+  const skin = new THREE.MeshStandardMaterial({color:0x8b6a52, roughness:0.9});
+  const sleeve = new THREE.MeshStandardMaterial({color:0x202b25, roughness:0.95});
+  const metal = new THREE.MeshStandardMaterial({color:0x303633, metalness:0.75, roughness:0.28});
+  const dark = new THREE.MeshStandardMaterial({color:0x111514, metalness:0.45, roughness:0.4});
+
+  const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.085,0.34,4,8),skin);
+  forearm.rotation.z=-0.55;
+  forearm.position.set(-0.13,-0.02,0.05);
+  weapon.add(forearm);
+
+  const sleevePart = new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.11,0.24,10),sleeve);
+  sleevePart.rotation.z=-0.55;
+  sleevePart.position.set(-0.22,0.09,0.08);
+  weapon.add(sleevePart);
+
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.3,0.16),dark);
+  grip.position.set(0,-0.08,0);
+  grip.rotation.x=-0.22;
+  weapon.add(grip);
+
+  const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.18,0.18,0.58),metal);
+  receiver.position.set(0,0.06,-0.28);
+  weapon.add(receiver);
+
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,0.72,12),metal);
+  barrel.rotation.x=Math.PI/2;
+  barrel.position.set(0,0.08,-0.86);
+  weapon.add(barrel);
+
+  const sight = new THREE.Mesh(new THREE.BoxGeometry(0.055,0.08,0.14),dark);
+  sight.position.set(0,0.18,-0.45);
+  weapon.add(sight);
+
+  const hand = new THREE.Mesh(new THREE.SphereGeometry(0.12,10,8),skin);
+  hand.scale.set(1.05,0.75,1.2);
+  hand.position.set(0.02,-0.03,-0.15);
+  weapon.add(hand);
+
+  const muzzle = new THREE.Mesh(
+    new THREE.SphereGeometry(0.11,8,8),
+    new THREE.MeshBasicMaterial({color:0xffd27a,transparent:true,opacity:0})
+  );
+  muzzle.position.set(0,0.08,-1.22);
+  muzzle.name='muzzle';
+  weapon.add(muzzle);
+
+  camera.add(weapon);
+  camera.userData.weaponBob=0;
+}
 
 function mat(color, rough=0.8, emissive=0x000000) {
   return new THREE.MeshStandardMaterial({color, roughness:rough, emissive, emissiveIntensity:0.25});
@@ -133,6 +196,19 @@ function buildRoadDetails() {
       roads.add(dash);
     }
   }
+  const lampMat=mat(0x202522,0.7);
+  const glowMat=mat(0xffc36a,0.35,0xff9d38);
+  for(const p of [-84,-56,-28,28,56,84]){
+    for(const axis of ['x','z']){
+      const pole=new THREE.Mesh(new THREE.CylinderGeometry(.08,.1,4.8,8),lampMat);
+      const lamp=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),glowMat);
+      if(axis==='x'){ pole.position.set(p,2.4,7.2); lamp.position.set(p,4.85,7.2); }
+      else { pole.position.set(7.2,2.4,p); lamp.position.set(7.2,4.85,p); }
+      pole.castShadow=true; roads.add(pole); roads.add(lamp);
+      const light=new THREE.PointLight(0xffbd72,1.2,18,2);
+      light.position.copy(lamp.position); roads.add(light);
+    }
+  }
 }
 
 function makeCar() {
@@ -191,7 +267,7 @@ function blocked(x,z) {
 function resetLevel() {
   zombies.splice(0).forEach(z=>actors.remove(z));
   bullets=[];
-  hp=100;stamina=100;kills=0;levelKills=0;levelTime=0;spawnTimer=.3;inCar=false;
+  hp=100;stamina=100;kills=0;levelKills=0;levelTime=0;spawnTimer=.3;inCar=false;ammo=30;reloadTimer=0;muzzleTimer=0;
   camera.position.set(0,1.7,8);
   car.position.set(6,0,6);
   updateUI();
@@ -231,8 +307,16 @@ function updateUI() {
 }
 
 function shoot() {
-  if(!started||!controls.isLocked||shootCooldown>0||levelComplete.classList.contains('hidden')===false)return;
-  shootCooldown=.22;
+  if(!started||!controls.isLocked||shootCooldown>0||reloadTimer>0||ammo<=0||!levelComplete.classList.contains('hidden')) {
+    if(ammo<=0 && reloadTimer<=0) toast('PRESS R TO RELOAD');
+    return;
+  }
+  shootCooldown=.16;
+  ammo--;
+  muzzleTimer=.06;
+  const muzzle=weapon?.getObjectByName('muzzle');
+  if(muzzle) muzzle.material.opacity=1;
+  camera.userData.weaponKick=0.08;
   raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
   const hits=raycaster.intersectObjects(zombies.flatMap(z=>z.children),true);
   if(hits.length){
@@ -243,6 +327,12 @@ function shoot() {
     }
   }
   toast('SHOT');
+}
+
+function reload() {
+  if(!started||reloadTimer>0||ammo===30)return;
+  reloadTimer=1.15;
+  toast('RELOADING');
 }
 
 function toggleVehicle() {
@@ -288,6 +378,17 @@ function updateZombies(dt) {
 function gameTick(dt) {
   if(!started||!controls.isLocked)return;
   levelTime+=dt;shootCooldown=Math.max(0,shootCooldown-dt);
+  if(reloadTimer>0){ reloadTimer-=dt; if(reloadTimer<=0) ammo=30; }
+  if(muzzleTimer>0){ muzzleTimer-=dt; if(muzzleTimer<=0){const muzzle=weapon?.getObjectByName('muzzle');if(muzzle)muzzle.material.opacity=0;} }
+  camera.userData.weaponBob=(camera.userData.weaponBob||0)+dt*(keys.w||keys.a||keys.s||keys.d?10:3);
+  if(weapon){
+    const moving=keys.w||keys.a||keys.s||keys.d;
+    const bob=moving?Math.sin(camera.userData.weaponBob)*0.012:0;
+    weapon.position.y=-0.42+bob;
+    const kick=camera.userData.weaponKick||0;
+    weapon.position.z=-0.72+kick;
+    camera.userData.weaponKick=Math.max(0,kick-dt*0.55);
+  }
   movePlayer(dt);
   spawnTimer-=dt;
   const maxZombies=Math.min(12,4+levelInfo(level).act+Math.floor(levelInfo(level).local/10));
@@ -330,6 +431,7 @@ window.addEventListener('mousedown',e=>{if(e.button===0)shoot();});
 window.addEventListener('keydown',e=>{
   keys[e.key.toLowerCase()]=true;
   if(e.key.toLowerCase()==='e')toggleVehicle();
+  if(e.key.toLowerCase()==='r')reload();
 });
 window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 window.addEventListener('resize',()=>{
@@ -337,6 +439,7 @@ window.addEventListener('resize',()=>{
 });
 
 setupLevel();
+buildWeapon();
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),.05);
