@@ -1,17 +1,26 @@
-const $=s=>document.querySelector(s);
-const modal=$('#modal'),modalTitle=$('#modalTitle'),modalText=$('#modalText');
-function openModal(title,text){modalTitle.textContent=title;modalText.textContent=text;modal.classList.add('show');modal.setAttribute('aria-hidden','false')}
-function closeModal(){modal.classList.remove('show');modal.setAttribute('aria-hidden','true')}
-$('#closeModal').addEventListener('click',closeModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
-$('#playBtn').addEventListener('click',()=>$('#play').scrollIntoView());
-$('#challengeBtn').addEventListener('click',()=>$('#challenges').scrollIntoView());
-document.querySelectorAll('[data-action="start"]').forEach(b=>b.addEventListener('click',()=>openModal('The First Night','The five-wave challenge is queued. Next gameplay pass will connect this button to the 3D survival scene.')));
-document.querySelector('[data-action="vehicle"]').addEventListener('click',()=>openModal('Vehicles','Vehicles are part of the DeadZone plan: approach, press E to enter, drive, exit, repair, and manage fuel.'));
-$('#modalAction').addEventListener('click',closeModal);
-
-let running=false,start=0,raf=0,best=Number(localStorage.getItem('deadzone-best-time')||0);
-function fmt(ms){const s=ms/1000;return String(Math.floor(s/60)).padStart(2,'0')+':'+(s%60).toFixed(2).padStart(5,'0')}
-function tick(){if(!running)return;$('#timer').textContent=fmt(performance.now()-start);raf=requestAnimationFrame(tick)}
-if(best)$('#bestTime').textContent=fmt(best);
-$('#runBtn').addEventListener('click',()=>{if(!running){running=true;start=performance.now();$('#runBtn').textContent='FINISH RUN';tick()}else{running=false;cancelAnimationFrame(raf);const t=performance.now()-start;if(!best||t<best){best=t;localStorage.setItem('deadzone-best-time',String(t));$('#bestTime').textContent=fmt(t)}$('#runBtn').textContent='START RUN'}});
-$('#resetBtn').addEventListener('click',()=>{running=false;cancelAnimationFrame(raf);$('#timer').textContent='00:00.00';$('#runBtn').textContent='START RUN'});
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');let W=960,H=540,DPR=1,keys={},mouse={x:480,y:270,down:false},p,wave=1,kills=0,start=performance.now(),last=start,spawn=0,gameOver=false,inCar=false,car,bullets=[],zombies=[];
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=canvas.clientWidth||960;H=W*9/16;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);if(p){p.x=Math.min(p.x,W-25);p.y=Math.min(p.y,H-25)}}window.addEventListener('resize',resize);
+function reset(){p={x:W/2,y:H/2,r:12,hp:100,speed:2.5};car={x:W*.72,y:H*.62,w:58,h:30,active:true};wave=1;kills=0;bullets=[];zombies=[];spawn=0;start=performance.now();last=start;gameOver=false;inCar=false;document.getElementById('message').textContent='WASD to move · Mouse to aim · Click to fire · E near a car';}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function spawnZombie(){const side=Math.floor(Math.random()*4),z={r:12,hp:2,s:0.45+wave*.07};z.x=side===0?-20:side===1?W+20:Math.random()*W;z.y=side===2?-20:side===3?H+20:Math.random()*H;zombies.push(z)}
+function shoot(){if(gameOver)return;const a=Math.atan2(mouse.y-p.y,mouse.x-p.x);bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*9,vy:Math.sin(a)*9,life:55})}
+function nearCar(){return car&&dist(p,car)<55}
+function toggleCar(){if(nearCar()||inCar){inCar=!inCar;p.x=car.x;p.y=car.y;document.getElementById('vehicle').textContent=inCar?'DRIVING':'ON FOOT';document.getElementById('message').textContent=inCar?'WASD drive · E exit · Click fires':'WASD to move · Mouse to aim · Click to fire · E near a car'}}
+function update(dt){if(gameOver)return;const mult=inCar?1.9:1;let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0),len=Math.hypot(dx,dy)||1;p.x=clamp(p.x+dx/len*p.speed*mult*dt,20,W-20);p.y=clamp(p.y+dy/len*p.speed*mult*dt,20,H-20);if(inCar){car.x=p.x;car.y=p.y}
+spawn-=dt;if(spawn<=0){for(let i=0;i<Math.min(1+wave,7);i++)spawnZombie();spawn=80-wave*7}
+if(mouse.down&&Math.random()<.25)shoot();
+bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt});bullets=bullets.filter(b=>b.life>0&&b.x>-20&&b.x<W+20&&b.y>-20&&b.y<H+20);
+zombies.forEach(z=>{const a=Math.atan2(p.y-z.y,p.x-z.x);z.x+=Math.cos(a)*z.s*dt;z.y+=Math.sin(a)*z.s*dt;if(dist(z,p)<p.r+z.r){p.hp-=inCar?.08:.16;}}); 
+for(let i=zombies.length-1;i>=0;i--){for(let j=bullets.length-1;j>=0;j--){if(dist(zombies[i],bullets[j])<zombies[i].r+5){zombies[i].hp--;bullets.splice(j,1);if(zombies[i].hp<=0){zombies.splice(i,1);kills++;}break}}}
+if(kills>=wave*6){wave++;if(wave>5){gameOver=true;document.getElementById('message').textContent='NIGHT SURVIVED! Press RESTART to run again.'}else{document.getElementById('message').textContent='WAVE '+wave+' — KEEP MOVING';}}if(p.hp<=0){gameOver=true;document.getElementById('message').textContent='YOU WERE OVERRUN. Press RESTART.'}
+document.getElementById('health').textContent=Math.max(0,Math.ceil(p.hp));document.getElementById('wave').textContent=Math.min(wave,5);document.getElementById('waveHud').textContent=Math.min(wave,5)+' / 5';document.getElementById('time').textContent=((performance.now()-start)/1000).toFixed(1)+'s';const pr=document.getElementById('prompt');pr.style.display=nearCar()&&!inCar?'block':'none';pr.textContent='E — ENTER CAR'}
+function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#111812';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#202a23';ctx.lineWidth=1;for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ctx.fillStyle='#262d28';ctx.fillRect(W*.05,H*.38,W*.9,70);ctx.fillRect(W*.43,H*.08,75,H*.84);ctx.fillStyle='#1a211c';for(let i=0;i<18;i++){const x=(i*113)%W,y=(i*71)%H;ctx.fillRect(x,y,30,22)}
+if(car){ctx.save();ctx.translate(car.x,car.y);ctx.rotate(.08);ctx.fillStyle=inCar?'#9eb5a2':'#59645c';ctx.fillRect(-29,-15,58,30);ctx.fillStyle='#151b17';ctx.fillRect(-17,-11,30,10);ctx.fillStyle='#0b0e0c';ctx.fillRect(-24,-18,10,6);ctx.fillRect(14,-18,10,6);ctx.fillRect(-24,12,10,6);ctx.fillRect(14,12,10,6);ctx.restore()}
+bullets.forEach(b=>{ctx.fillStyle='#e2eee4';ctx.beginPath();ctx.arc(b.x,b.y,3,0,Math.PI*2);ctx.fill()});zombies.forEach(z=>{ctx.fillStyle='#7f927f';ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#101510';ctx.beginPath();ctx.arc(z.x-4,z.y-2,2,0,7);ctx.arc(z.x+4,z.y-2,2,0,7);ctx.fill()});
+ctx.fillStyle=inCar?'#dbe7dd':'#d2ddd4';ctx.beginPath();ctx.arc(p.x,p.y,inCar?16:p.r,0,Math.PI*2);ctx.fill();const a=Math.atan2(mouse.y-p.y,mouse.x-p.x);ctx.strokeStyle='#dce9df';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+Math.cos(a)*24,p.y+Math.sin(a)*24);ctx.stroke();
+if(gameOver){ctx.fillStyle='#000a';ctx.fillRect(0,0,W,H);ctx.fillStyle='#edf1ed';ctx.textAlign='center';ctx.font='900 38px system-ui';ctx.fillText(wave>5?'NIGHT SURVIVED':'OVERRUN',W/2,H/2-10);ctx.font='14px system-ui';ctx.fillText('Press RESTART to play again',W/2,H/2+25)}}
+function loop(t){const dt=Math.min((t-last)/16.67,2);last=t;update(dt);draw();requestAnimationFrame(loop)}
+window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='e')toggleCar();if(e.key===' '){e.preventDefault();shoot()}});window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height});canvas.addEventListener('mousedown',e=>{mouse.down=true;shoot()});window.addEventListener('mouseup',()=>mouse.down=false);
+document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;['pointerdown','touchstart'].forEach(ev=>b.addEventListener(ev,e=>{e.preventDefault();keys[k]=true}));['pointerup','pointerleave','touchend'].forEach(ev=>b.addEventListener(ev,e=>{e.preventDefault();keys[k]=false}))});document.getElementById('restart').addEventListener('click',reset);resize();reset();requestAnimationFrame(loop);
