@@ -1,11 +1,65 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeadZone — Playable Prototype</title><link rel="stylesheet" href="style.css"></head>
-<body><main class="game-shell">
-<header><div class="brand">DEAD<span>ZONE</span></div><div class="header-info">NIGHT <b id="wave">1</b>/5 <i></i> SURVIVE</div></header>
-<section class="game-wrap"><canvas id="game" aria-label="DeadZone playable survival game"></canvas>
-<div class="hud"><div><small>HEALTH</small><strong id="health">100</strong></div><div><small>WAVE</small><strong id="waveHud">1 / 5</strong></div><div><small>TIME</small><strong id="time">00:00</strong></div><div><small>VEHICLE</small><strong id="vehicle">ON FOOT</strong></div></div>
-<div class="crosshair">+</div><div class="prompt" id="prompt"></div><div class="message" id="message">WASD to move · Mouse to aim · Click to fire · E near a car</div>
-<div class="mobile-controls"><button data-key="w">▲</button><div><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div></div>
-</section>
-<section class="below"><div><p>THE FIRST NIGHT</p><h1>Survive 5 waves.</h1><span>Defeat the incoming infected, reach the next wave, and use the abandoned car when you need a fast escape.</span></div><button id="restart">RESTART RUN</button></section>
-</main><script src="script.js"></script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DeadZone — 3D First Person</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <div id="game"></div>
+
+  <div id="menu" class="screen">
+    <div class="menu-card">
+      <div class="eyebrow">THE EPIC BUILDERS PRESENT</div>
+      <h1>DEAD<span>ZONE</span></h1>
+      <p class="subtitle">A 3D first-person survival campaign.</p>
+      <div class="campaign">
+        <div><b id="actName">ACT 1 — OUTBREAK</b><span id="levelName">LEVEL 1 — FIRST NIGHT</span></div>
+        <strong id="campaignCount">1 / 250</strong>
+      </div>
+      <button id="start">ENTER DEADZONE</button>
+      <p class="hint">WASD move · Mouse look · Click fire · Shift sprint · E vehicle</p>
+    </div>
+  </div>
+
+  <div id="hud" class="hidden">
+    <div class="topbar">
+      <div class="stat"><small>ACT</small><b id="hudAct">1</b></div>
+      <div class="stat"><small>LEVEL</small><b id="hudLevel">1 / 50</b></div>
+      <div class="stat"><small>HEALTH</small><b id="health">100</b></div>
+      <div class="stat"><small>STAMINA</small><b id="stamina">100</b></div>
+      <div class="stat"><small>TIME</small><b id="time">0:00</b></div>
+    </div>
+    <div class="objective"><small id="objectiveTag">THE FIRST NIGHT</small><b id="objective">Survive the outbreak.</b><span id="progress">0 / 6</span></div>
+    <div id="crosshair">+</div>
+    <div id="prompt"></div>
+    <div id="vehicleHud" class="hidden">VEHICLE <b>ON</b> · WASD DRIVE · E EXIT</div>
+    <div id="toast" aria-live="polite"></div>
+  </div>
+
+  <div id="levelComplete" class="screen hidden">
+    <div class="menu-card compact">
+      <div class="eyebrow">LEVEL COMPLETE</div>
+      <h2 id="completeTitle">LEVEL 1</h2>
+      <p id="completeText">Area secured.</p>
+      <button id="nextLevel">NEXT LEVEL</button>
+    </div>
+  </div>
+
+  <div id="gameOver" class="screen hidden">
+    <div class="menu-card compact">
+      <div class="eyebrow">RUN ENDED</div>
+      <h2>OVERRUN</h2>
+      <p id="gameOverText">The city took you down.</p>
+      <button id="retry">RETRY LEVEL</button>
+    </div>
+  </div>
+</main>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}
+</script>
+<script type="module" src="script.js"></script>
+</body>
+</html>
