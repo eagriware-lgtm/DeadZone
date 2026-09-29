@@ -59,8 +59,9 @@ scene.add(moon);
 
 const world = new THREE.Group();
 const city = new THREE.Group();
+const roads = new THREE.Group();
 const actors = new THREE.Group();
-scene.add(world, actors);
+scene.add(world, roads, actors);
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), new THREE.MeshStandardMaterial({ color:0x202820, roughness:1 }));
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
@@ -117,6 +118,7 @@ function buildCity() {
 }
 
 function buildRoadDetails() {
+  clearGroup(roads);
   const roadMat = mat(0x171b18);
   const laneMat = mat(0x667067);
   for (const axis of ['x','z']) {
@@ -124,11 +126,11 @@ function buildRoadDetails() {
     road.rotation.x = -Math.PI/2;
     if (axis === 'x') road.position.y = .015;
     else { road.rotation.z = Math.PI/2; road.position.y = .016; }
-    world.add(road);
+    roads.add(road);
     for (let p=-100;p<100;p+=12) {
       const dash = new THREE.Mesh(new THREE.BoxGeometry(axis==='x'?6:.16,.03,axis==='x'?.16:6),laneMat);
       dash.position.set(axis==='x'?p:0,.04,axis==='x'?0:p);
-      world.add(dash);
+      roads.add(dash);
     }
   }
 }
