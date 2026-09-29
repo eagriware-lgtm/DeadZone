@@ -76,42 +76,72 @@ world.add(ground);
 
 function buildWeapon() {
   if (weapon) return;
+
   weapon = new THREE.Group();
   weapon.position.set(0.42, -0.42, -0.72);
   weapon.rotation.set(-0.05, -0.02, 0.02);
 
+  // Stylized M416-inspired first-person rifle: original low-poly game asset.
   const skin = new THREE.MeshStandardMaterial({color:0x8b6a52, roughness:0.9});
   const sleeve = new THREE.MeshStandardMaterial({color:0x202b25, roughness:0.95});
-  const metal = new THREE.MeshStandardMaterial({color:0x303633, metalness:0.75, roughness:0.28});
-  const dark = new THREE.MeshStandardMaterial({color:0x111514, metalness:0.45, roughness:0.4});
+  const black = new THREE.MeshStandardMaterial({color:0x101514, metalness:0.5, roughness:0.35});
+  const metal = new THREE.MeshStandardMaterial({color:0x343b38, metalness:0.8, roughness:0.28});
+  const accent = new THREE.MeshStandardMaterial({color:0x59615c, metalness:0.55, roughness:0.32});
+
+  const sleevePart = new THREE.Mesh(new THREE.CylinderGeometry(0.095,0.11,0.25,10), sleeve);
+  sleevePart.rotation.z=-0.55;
+  sleevePart.position.set(-0.22,0.09,0.08);
+  weapon.add(sleevePart);
 
   const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.085,0.34,4,8),skin);
   forearm.rotation.z=-0.55;
   forearm.position.set(-0.13,-0.02,0.05);
   weapon.add(forearm);
 
-  const sleevePart = new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.11,0.24,10),sleeve);
-  sleevePart.rotation.z=-0.55;
-  sleevePart.position.set(-0.22,0.09,0.08);
-  weapon.add(sleevePart);
+  // Receiver + upper rail.
+  const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.19,0.20,0.62),metal);
+  receiver.position.set(0,0.07,-0.30);
+  weapon.add(receiver);
 
-  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.3,0.16),dark);
-  grip.position.set(0,-0.08,0);
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(0.10,0.055,0.48),black);
+  rail.position.set(0,0.205,-0.30);
+  weapon.add(rail);
+
+  // Handguard.
+  const handguard = new THREE.Mesh(new THREE.BoxGeometry(0.17,0.17,0.72),accent);
+  handguard.position.set(0,0.08,-0.88);
+  weapon.add(handguard);
+
+  // Barrel + muzzle.
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,0.68,12),black);
+  barrel.rotation.x=Math.PI/2;
+  barrel.position.set(0,0.08,-1.48);
+  weapon.add(barrel);
+
+  const muzzleDevice = new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.045,0.16,12),black);
+  muzzleDevice.rotation.x=Math.PI/2;
+  muzzleDevice.position.set(0,0.08,-1.83);
+  weapon.add(muzzleDevice);
+
+  // Magazine and grip.
+  const magazine = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.36,0.20),black);
+  magazine.position.set(0,-0.16,-0.12);
+  magazine.rotation.x=-0.12;
+  weapon.add(magazine);
+
+  const grip = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.30,0.16),black);
+  grip.position.set(0,-0.13,0.02);
   grip.rotation.x=-0.22;
   weapon.add(grip);
 
-  const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.18,0.18,0.58),metal);
-  receiver.position.set(0,0.06,-0.28);
-  weapon.add(receiver);
+  // Front sight and rear sight.
+  const frontSight = new THREE.Mesh(new THREE.BoxGeometry(0.045,0.11,0.06),black);
+  frontSight.position.set(0,0.20,-1.45);
+  weapon.add(frontSight);
 
-  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,0.72,12),metal);
-  barrel.rotation.x=Math.PI/2;
-  barrel.position.set(0,0.08,-0.86);
-  weapon.add(barrel);
-
-  const sight = new THREE.Mesh(new THREE.BoxGeometry(0.055,0.08,0.14),dark);
-  sight.position.set(0,0.18,-0.45);
-  weapon.add(sight);
+  const rearSight = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.09,0.08),black);
+  rearSight.position.set(0,0.23,-0.42);
+  weapon.add(rearSight);
 
   const hand = new THREE.Mesh(new THREE.SphereGeometry(0.12,10,8),skin);
   hand.scale.set(1.05,0.75,1.2);
@@ -122,7 +152,7 @@ function buildWeapon() {
     new THREE.SphereGeometry(0.11,8,8),
     new THREE.MeshBasicMaterial({color:0xffd27a,transparent:true,opacity:0})
   );
-  muzzle.position.set(0,0.08,-1.22);
+  muzzle.position.set(0,0.08,-1.91);
   muzzle.name='muzzle';
   weapon.add(muzzle);
 
