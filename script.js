@@ -299,6 +299,7 @@ function updateUI() {
   document.getElementById('health').textContent=Math.max(0,Math.ceil(hp));
   document.getElementById('stamina').textContent=Math.ceil(stamina);
   document.getElementById('time').textContent=Math.floor(levelTime/60)+':'+String(Math.floor(levelTime%60)).padStart(2,'0');
+  document.getElementById('ammo').textContent=reloadTimer>0?'...':ammo;
   document.getElementById('objectiveTag').textContent=themes[info.act-1].name;
   document.getElementById('objective').textContent=info.act===2?'Reach the next safe zone.':info.act===3?'Search the abandoned district.':info.act===4?'Break through the DeadZone.':info.act===5?'Reach the last light.':'Survive the outbreak.';
   targetKills=Math.min(18,5+Math.floor(info.local/4)+info.act*2);
