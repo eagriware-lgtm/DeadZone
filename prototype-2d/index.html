@@ -1,1 +1,11 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>DeadZone 2D Prototype Backup</title><link rel="stylesheet" href="style.css"></head><body><main><h1>DeadZone — 2D Prototype Backup</h1><p>This folder preserves the original playable prototype.</p><p>Run its index.html with a local server to play it.</p></main></body></html>
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeadZone — Playable Prototype</title><link rel="stylesheet" href="style.css"></head>
+<body><main class="game-shell">
+<header><div class="brand">DEAD<span>ZONE</span></div><div class="header-info">NIGHT <b id="wave">1</b>/5 <i></i> SURVIVE</div></header>
+<section class="game-wrap"><canvas id="game" aria-label="DeadZone playable survival game"></canvas>
+<div class="hud"><div><small>HEALTH</small><strong id="health">100</strong></div><div><small>WAVE</small><strong id="waveHud">1 / 5</strong></div><div><small>TIME</small><strong id="time">00:00</strong></div><div><small>VEHICLE</small><strong id="vehicle">ON FOOT</strong></div></div>
+<div class="crosshair">+</div><div class="prompt" id="prompt"></div><div class="message" id="message">WASD to move · Mouse to aim · Click to fire · E near a car</div>
+<div class="mobile-controls"><button data-key="w">▲</button><div><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div></div>
+</section>
+<section class="below"><div><p>THE FIRST NIGHT</p><h1>Survive 5 waves.</h1><span>Defeat the incoming infected, reach the next wave, and use the abandoned car when you need a fast escape.</span></div><button id="restart">RESTART RUN</button></section>
+</main><script src="script.js"></script></body></html>
